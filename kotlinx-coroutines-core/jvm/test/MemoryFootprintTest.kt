@@ -18,10 +18,10 @@ class MemoryFootprintTest : TestBase(true) {
 
     @Test
     fun testJobSize() {
-        assertTotalSize(jobWithChildren(1), 112)
-        assertTotalSize(jobWithChildren(2), 336) // originally: 192
-        assertTotalSize(jobWithChildren(3), 416) // originally: 248
-        assertTotalSize(jobWithChildren(4), 496) // originally: 304
+        assertTotalSize(jobWithChildren(1), 120) // originally: 112
+        assertTotalSize(jobWithChildren(2), 304) // originally: 192
+        assertTotalSize(jobWithChildren(3), 368) // originally: 248
+        assertTotalSize(jobWithChildren(4), 432) // originally: 304
     }
 
     private fun jobWithChildren(numberOfChildren: Int): Job {
