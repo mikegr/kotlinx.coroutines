@@ -2,6 +2,7 @@ package kotlinx.coroutines
 
 import kotlinx.coroutines.internal.*
 import kotlin.coroutines.*
+import kotlin.jvm.*
 
 /**
  * Base class to be extended by all coroutine dispatcher implementations.
@@ -72,6 +73,8 @@ public abstract class CoroutineDispatcher :
      * each view controls its own parallelism independently with the guarantee that the effective parallelism
      * of all views cannot exceed the actual parallelism of the original dispatcher.
      *
+     * The [name] can be supplied to the view for diagnostic and debugging purposes.
+     *
      * ### Limitations
      *
      * The default implementation of `limitedParallelism` does not support direct dispatchers,
@@ -84,9 +87,9 @@ public abstract class CoroutineDispatcher :
      * ```
      * private val backgroundDispatcher = newFixedThreadPoolContext(4, "App Background")
      * // At most 2 threads will be processing images as it is really slow and CPU-intensive
-     * private val imageProcessingDispatcher = backgroundDispatcher.limitedParallelism(2)
+     * private val imageProcessingDispatcher = backgroundDispatcher.limitedParallelism(2, "Image processor dispatcher")
      * // At most 3 threads will be processing JSON to avoid image processing starvation
-     * private val jsonProcessingDispatcher = backgroundDispatcher.limitedParallelism(3)
+     * private val jsonProcessingDispatcher = backgroundDispatcher.limitedParallelism(3, "Json processor dispatcher")
      * // At most 1 thread will be doing IO
      * private val fileWriterDispatcher = backgroundDispatcher.limitedParallelism(1)
      * ```
@@ -96,12 +99,22 @@ public abstract class CoroutineDispatcher :
      * Note that this example was structured in such a way that it illustrates the parallelism guarantees.
      * In practice, it is usually better to use [Dispatchers.IO] or [Dispatchers.Default] instead of creating a
      * `backgroundDispatcher`. It is both possible and advised to call `limitedParallelism` on them.
+     *
+     * @throws UnsupportedOperationException if current dispatcher does not support limited parallelism capabilities.
      */
     @ExperimentalCoroutinesApi
-    public open fun limitedParallelism(parallelism: Int): CoroutineDispatcher {
+    public open fun limitedParallelism(parallelism: Int, name: String? = null): CoroutineDispatcher {
         parallelism.checkParallelism()
-        return LimitedDispatcher(this, parallelism)
+        return LimitedDispatcher(this, name, parallelism)
     }
+
+    /**
+     * Legacy overload left for compatibility purposes.
+     * @suppress
+     */
+    @ExperimentalCoroutinesApi
+    @Deprecated("", level = DeprecationLevel.HIDDEN)
+    public open fun limitedParallelism(parallelism: Int): CoroutineDispatcher = limitedParallelism(parallelism, null)
 
     /**
      * Requests execution of a runnable [block].

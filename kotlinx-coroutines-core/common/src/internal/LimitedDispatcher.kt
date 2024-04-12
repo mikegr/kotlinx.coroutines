@@ -21,6 +21,7 @@ import kotlin.coroutines.*
  */
 internal class LimitedDispatcher(
     private val dispatcher: CoroutineDispatcher,
+    private val name: String?,
     private val parallelism: Int
 ) : CoroutineDispatcher(), Delay by (dispatcher as? Delay ?: DefaultDelay) {
 
@@ -33,11 +34,12 @@ internal class LimitedDispatcher(
     // A separate object that we can synchronize on for K/N
     private val workerAllocationLock = SynchronizedObject()
 
+    @Deprecated("", level = DeprecationLevel.HIDDEN)
     @ExperimentalCoroutinesApi
     override fun limitedParallelism(parallelism: Int): CoroutineDispatcher {
         parallelism.checkParallelism()
         if (parallelism >= this.parallelism) return this
-        return super.limitedParallelism(parallelism)
+        return super.limitedParallelism(parallelism, null)
     }
 
     override fun dispatch(context: CoroutineContext, block: Runnable) {
@@ -95,6 +97,13 @@ internal class LimitedDispatcher(
         }
     }
 
+    override fun toString(): String {
+        if (name == null) {
+            return "$dispatcher.limitedParallelism($parallelism)"
+        }
+        return name
+    }
+
     /**
      * A worker that polls the queue and runs tasks until there are no more of them.
      *
@@ -125,5 +134,4 @@ internal class LimitedDispatcher(
     }
 }
 
-// Save a few bytecode ops
 internal fun Int.checkParallelism() = require(this >= 1) { "Expected positive parallelism level, but got $this" }
